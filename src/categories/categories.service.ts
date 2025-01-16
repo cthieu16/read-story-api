@@ -8,7 +8,6 @@ import { CollectionResponse } from 'src/_dtos/output.dto';
 import { UpdateCategoryDto } from 'src/_dtos/update_category.dto';
 import { Book, BookDocument } from 'src/_schemas/book.schema';
 import { Category, CategoryDocument } from 'src/_schemas/category.schema';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DocumentCollector } from 'src/common/executor/collector';
 
 @Injectable()
@@ -18,7 +17,6 @@ export class CategoriesService {
     private readonly categoryModel: Model<CategoryDocument>,
     @InjectModel(Book.name)
     private readonly bookModel: Model<BookDocument>,
-    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(

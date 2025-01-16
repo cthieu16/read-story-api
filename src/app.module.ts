@@ -12,6 +12,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { UsersModule } from './users/users.module';
 import { UserSeed } from './_seeds/user.seed';
 import { User, UserSchema } from './_schemas/user.schema';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { User, UserSchema } from './_schemas/user.schema';
     CategoriesModule,
     StatisticsModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    UploadsModule,
   ],
   providers: [UserSeed],
 })
