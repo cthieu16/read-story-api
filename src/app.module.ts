@@ -3,17 +3,13 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
-import { ChaptersModule } from './chapters/chapters.module';
-import { EpisodesModule } from './episodes/episodes.module';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CategoriesModule } from './categories/categories.module';
-import { UploadsModule } from './uploads/uploads.module';
-import { StreamsModule } from './streams/streams.module';
-import { IAPModule } from '@jeremybarbet/nest-iap';
-import { IapModule } from './iap/iap.module';
-import { StatisticalsModule } from './statisticals/statisticals.module';
+import { ChaptersModule } from './chapters/chapters.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { EpisodesModule } from './episodes/episodes.module';
+import { StatisticsModule } from './statistics/statistics.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -38,10 +34,7 @@ import { StatisticalsModule } from './statisticals/statisticals.module';
     EpisodesModule,
     CloudinaryModule,
     CategoriesModule,
-    UploadsModule,
-    StreamsModule,
-    IapModule,
-    StatisticalsModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}

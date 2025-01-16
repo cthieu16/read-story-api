@@ -8,7 +8,7 @@ import { Episode, EpisodeDocument } from 'src/_schemas/episode.schema';
 import { User, UserDocument } from 'src/_schemas/user.schema';
 
 @Injectable()
-export class StatisticalsService {
+export class StatisticsService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Category.name)
