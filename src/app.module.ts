@@ -10,6 +10,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { EpisodesModule } from './episodes/episodes.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { UsersModule } from './users/users.module';
+import { UserSeed } from './_seeds/user.seed';
+import { User, UserSchema } from './_schemas/user.schema';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { UsersModule } from './users/users.module';
     CloudinaryModule,
     CategoriesModule,
     StatisticsModule,
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
+  providers: [UserSeed],
 })
 export class AppModule {}
