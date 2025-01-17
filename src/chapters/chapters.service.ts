@@ -1,15 +1,14 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ChapterPaginationDto } from 'src/_dtos/chapter-pagination.dto';
 import { CreateChapterDto } from 'src/_dtos/create_chapter.dto';
 import { UpdateChapterDto } from 'src/_dtos/update_chapter.dto';
 import { Book, BookDocument } from 'src/_schemas/book.schema';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CollectionDto } from '../_dtos/input.dto';
 import { CollectionResponse } from '../_dtos/output.dto';
 import { Chapter, ChapterDocument } from '../_schemas/chapter.schema';
 import { DocumentCollector } from '../common/executor/collector';
-import { ChapterPaginationDto } from 'src/_dtos/chapter-pagination.dto';
 
 @Injectable()
 export class ChaptersService {
@@ -18,7 +17,6 @@ export class ChaptersService {
     private readonly chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name)
     private readonly bookModel: Model<BookDocument>,
-    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(
@@ -32,6 +30,50 @@ export class ChaptersService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async findAllPagination(dto: ChapterPaginationDto): Promise<any> {
+    const { page = 1, limit = 10, ...filters } = dto;
+
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (filters.name) {
+      filter.name = { $regex: filters.name, $options: 'i' };
+    }
+
+    if (filters.description) {
+      filter.description = { $regex: filters.description, $options: 'i' };
+    }
+
+    if (filters.isPremium !== undefined) {
+      filter.isPremium = filters.isPremium;
+    }
+
+    if (filters.bookId) {
+      filter.bookId = { $regex: filters.bookId, $options: 'i' };
+    }
+
+    const [data, total] = await Promise.all([
+      this.chapterModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ name: 1 })
+        .exec(),
+      this.chapterModel.countDocuments(filter).exec(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      total,
+      totalPages,
+      currentPage: Number(page),
+      limit: Number(limit),
+      data,
+    };
   }
 
   async findById(id: string): Promise<{ statusCode: number; data: Chapter }> {
@@ -130,26 +172,6 @@ export class ChaptersService {
     }
   }
 
-  // async findByBookId(
-  //   bookId: string,
-  // ): Promise<{ statusCode: number; data: Chapter[] }> {
-  //   try {
-  //     const chapters = await this.chapterModel
-  //       .find({ bookId })
-  //       .sort({ createdAt: -1 })
-  //       .populate('bookId')
-  //       .lean()
-  //       .exec();
-
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       data: chapters.length ? chapters : [],
-  //     };
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
   async findByBookId(bookId: string): Promise<{
     statusCode: number;
     data: { book: Book; chapters: Chapter[] };
@@ -177,111 +199,5 @@ export class ChaptersService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async findNextChapter(
-    bookId: string,
-    currentChapterId: string,
-  ): Promise<{ statusCode: number; data: Chapter | null }> {
-    try {
-      const currentChapter = await this.chapterModel
-        .findById(currentChapterId)
-        .exec();
-
-      if (!currentChapter) {
-        throw new NotFoundException(
-          `Current chapter with id ${currentChapterId} not found`,
-        );
-      }
-
-      const nextChapter = await this.chapterModel
-        .findOne({ bookId, _id: { $ne: currentChapterId } })
-        .sort({ createdAt: 1 })
-        .populate('bookId')
-        .lean()
-        .exec();
-
-      return {
-        statusCode: HttpStatus.OK,
-        data: nextChapter || null,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findPrevChapter(
-    bookId: string,
-    currentChapterId: string,
-  ): Promise<{ statusCode: number; data: Chapter | null }> {
-    try {
-      const currentChapter = await this.chapterModel
-        .findById(currentChapterId)
-        .exec();
-
-      if (!currentChapter) {
-        throw new NotFoundException(
-          `Current chapter with id ${currentChapterId} not found`,
-        );
-      }
-
-      const prevChapter = await this.chapterModel
-        .findOne({ bookId, _id: { $ne: currentChapterId } })
-        .sort({ createdAt: -1 })
-        .populate('bookId')
-        .lean()
-        .exec();
-
-      return {
-        statusCode: HttpStatus.OK,
-        data: prevChapter || null,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findAllPagination(dto: ChapterPaginationDto): Promise<any> {
-    const { page = 1, limit = 10, ...filters } = dto;
-
-    const skip = (page - 1) * limit;
-
-    const filter: any = {};
-
-    if (filters.name) {
-      filter.name = { $regex: filters.name, $options: 'i' };
-    }
-
-    if (filters.description) {
-      filter.description = { $regex: filters.description, $options: 'i' };
-    }
-
-    if (filters.isPremium !== undefined) {
-      filter.isPremium = filters.isPremium;
-    }
-
-    if (filters.bookId) {
-      filter.bookId = { $regex: filters.bookId, $options: 'i' };
-    }
-
-    const [data, total] = await Promise.all([
-      this.chapterModel
-        .find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ name: 1 }) 
-        .exec(),
-      this.chapterModel.countDocuments(filter).exec(),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      total,
-      totalPages,
-      currentPage: Number(page),
-      limit: Number(limit),
-      data,
-    };
   }
 }

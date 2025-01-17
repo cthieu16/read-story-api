@@ -30,6 +30,18 @@ export class BooksController {
     return this.booksService.findAll(query);
   }
 
+  @Get('all/pagination')
+  async findAllPagination(@Query() dto: BookPaginationDto) {
+    return this.booksService.findAllPagination(dto);
+  }
+
+  @Get('all/no-pagination')
+  async findAllNoPagination(
+    @Query('name') name?: string,
+  ): Promise<{ statusCode: number; data: Book[] }> {
+    return this.booksService.findAllNoPagination(name);
+  }
+
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.booksService.findById(id);
@@ -64,17 +76,5 @@ export class BooksController {
   @Get('get/all-top-10-year')
   async findAllTop10Year(): Promise<{ data: Book[] }> {
     return this.booksService.findAllTop10Year();
-  }
-
-  @Get('all/no-pagination')
-  async findAllNoPagination(
-    @Query('name') name?: string,
-  ): Promise<{ statusCode: number; data: Book[] }> {
-    return this.booksService.findAllNoPagination(name);
-  }
-
-  @Get('all/pagination')
-  async findAllPagination(@Query() dto: BookPaginationDto) {
-    return this.booksService.findAllPagination(dto);
   }
 }

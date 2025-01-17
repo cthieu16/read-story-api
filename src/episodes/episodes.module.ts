@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
-import { EpisodesService } from './episodes.service';
-import { EpisodesController } from './episodes.controller';
+import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Book, BookSchema } from 'src/_schemas/book.schema';
+import { Chapter, ChapterSchema } from 'src/_schemas/chapter.schema';
+import { BooksService } from 'src/books/books.service';
+import { ChaptersService } from 'src/chapters/chapters.service';
+import { UsersService } from 'src/users/users.service';
 import { Episode, EpisodeSchema } from '../_schemas/episode.schema';
 import { User, UserSchema } from '../_schemas/user.schema';
-import { UsersService } from 'src/users/users.service';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { ConfigService } from '@nestjs/config';
-import { Chapter, ChapterSchema } from 'src/_schemas/chapter.schema';
-import { Book, BookSchema } from 'src/_schemas/book.schema';
-import { ChaptersService } from 'src/chapters/chapters.service';
-import { BooksService } from 'src/books/books.service';
+import { EpisodesController } from './episodes.controller';
+import { EpisodesService } from './episodes.service';
 
 @Module({
   imports: [
@@ -23,7 +22,6 @@ import { BooksService } from 'src/books/books.service';
   providers: [
     EpisodesService,
     UsersService,
-    CloudinaryService,
     ConfigService,
     ChaptersService,
     BooksService,

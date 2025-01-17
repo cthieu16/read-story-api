@@ -1,11 +1,5 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsUrl,
-  IsMongoId,
-} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBookDto {
   @ApiProperty({

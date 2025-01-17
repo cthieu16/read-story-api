@@ -4,26 +4,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { AssemblyAI } from 'assemblyai';
 import mongoose, { Model } from 'mongoose';
 import { CreateEpisodeDto } from 'src/_dtos/create_episode.dto';
+import { EpisodePaginationDto } from 'src/_dtos/episode-pagination.dto';
 import { CollectionDto } from 'src/_dtos/input.dto';
 import { CollectionResponse, EpisodeWithFavorite } from 'src/_dtos/output.dto';
 import { UpdateEpisodeDto } from 'src/_dtos/update_episode.dto';
 import { Book, BookDocument } from 'src/_schemas/book.schema';
 import { Chapter, ChapterDocument } from 'src/_schemas/chapter.schema';
 import { User, UserDocument } from 'src/_schemas/user.schema';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DocumentCollector } from 'src/common/executor/collector';
 import { Episode, EpisodeDocument } from '../_schemas/episode.schema';
-import { EpisodePaginationDto } from 'src/_dtos/episode-pagination.dto';
 
 @Injectable()
 export class EpisodesService {
-  private readonly assemblyAIClient: AssemblyAI;
-
   constructor(
     @InjectModel(Episode.name)
     private readonly episodeModel: Model<EpisodeDocument>,
@@ -33,13 +28,7 @@ export class EpisodesService {
     private readonly chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name)
     private readonly bookModel: Model<BookDocument>,
-    private readonly cloudinaryService: CloudinaryService,
-    private readonly configService: ConfigService,
-  ) {
-    this.assemblyAIClient = new AssemblyAI({
-      apiKey: this.configService.get<string>('ASSEMBLYAI_API_KEY'),
-    });
-  }
+  ) {}
 
   async findAll(
     collectionDto: CollectionDto,
@@ -355,54 +344,6 @@ export class EpisodesService {
     }
   }
 
-  async transcribeAudioUrl(
-    episodeId: string,
-  ): Promise<{ statusCode: number; transcription: string }> {
-    try {
-      const episode = await this.episodeModel.findById(episodeId).exec();
-      if (!episode) {
-        throw new NotFoundException(`Episode with id ${episodeId} not found`);
-      }
-
-      if (!episode.url || !episode) {
-        throw new NotFoundException(
-          `URL is missing for episode with id ${episodeId}`,
-        );
-      }
-
-      const { id: transcriptId } =
-        await this.assemblyAIClient.transcripts.transcribe({
-          audio_url: episode.url,
-        });
-
-      const result = await this.pollTranscriptionStatus(transcriptId);
-
-      return {
-        statusCode: HttpStatus.OK,
-        transcription: result.text,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private async pollTranscriptionStatus(
-    transcriptId: string,
-    interval: number = 5000,
-  ): Promise<any> {
-    while (true) {
-      const result = await this.assemblyAIClient.transcripts.get(transcriptId);
-      if (result.status === 'completed') {
-        return result;
-      }
-      await this.delay(interval);
-    }
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async updateIsTop(
     id: string,
   ): Promise<{ statusCode: number; message: string; data: Episode }> {
@@ -448,9 +389,7 @@ export class EpisodesService {
     }
   }
 
-  async findAllPagination(
-    dto: EpisodePaginationDto,
-  ): Promise<any> {
+  async findAllPagination(dto: EpisodePaginationDto): Promise<any> {
     const { page = 1, limit = 10, ...filters } = dto;
 
     const skip = (page - 1) * limit;
@@ -458,37 +397,37 @@ export class EpisodesService {
     const filter: any = {};
 
     if (filters.title) {
-      filter.title = { $regex: filters.title, $options: 'i' }; 
+      filter.title = { $regex: filters.title, $options: 'i' };
     }
 
     if (filters.album) {
-      filter.album = { $regex: filters.album, $options: 'i' }; 
+      filter.album = { $regex: filters.album, $options: 'i' };
     }
 
     if (filters.artist) {
-      filter.artist = { $regex: filters.artist, $options: 'i' };  
+      filter.artist = { $regex: filters.artist, $options: 'i' };
     }
 
     if (filters.description) {
-      filter.description = { $regex: filters.description, $options: 'i' };  
+      filter.description = { $regex: filters.description, $options: 'i' };
     }
 
     if (filters.isPremium !== undefined) {
-      filter.isPremium = filters.isPremium; 
+      filter.isPremium = filters.isPremium;
     }
 
     if (filters.isTop !== undefined) {
-      filter.isTop = filters.isTop; 
+      filter.isTop = filters.isTop;
     }
 
     const [data, total] = await Promise.all([
       this.episodeModel
-        .find(filter) 
+        .find(filter)
         .skip(skip)
         .limit(limit)
-        .sort({ releaseDate: -1 }) 
+        .sort({ releaseDate: -1 })
         .exec(),
-      this.episodeModel.countDocuments(filter).exec(), 
+      this.episodeModel.countDocuments(filter).exec(),
     ]);
 
     const totalPages = Math.ceil(total / limit);

@@ -15,8 +15,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const options = new DocumentBuilder()
-    .setTitle('Podcast API')
-    .setDescription('Xin chào đã đến với 1 đống enpoint podcast api !!!')
+    .setTitle('Read Story API')
+    .setDescription('Hello World !!!')
     .setVersion('1.0')
     .addBearerAuth(
       {

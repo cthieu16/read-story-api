@@ -32,6 +32,76 @@ export class CategoriesService {
     }
   }
 
+  async findAllPagination(dto: CategoryPaginationDto): Promise<any> {
+    const { page = 1, limit = 10, ...filters } = dto;
+
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (filters.name) {
+      filter.name = { $regex: filters.name, $options: 'i' };
+    }
+
+    if (filters.url) {
+      filter.url = { $regex: filters.url, $options: 'i' };
+    }
+
+    const [data, total] = await Promise.all([
+      this.categoryModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ name: 1 })
+        .exec(),
+      this.categoryModel.countDocuments(filter).exec(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      total,
+      totalPages,
+      currentPage: Number(page),
+      limit: Number(limit),
+      data,
+    };
+  }
+
+  async findAllNoPagination(): Promise<{
+    statusCode: number;
+    data: Category[];
+  }> {
+    const categories = await this.categoryModel.aggregate([
+      {
+        $lookup: {
+          from: 'books',
+          localField: '_id',
+          foreignField: 'categoryId',
+          as: 'books',
+        },
+      },
+      {
+        $match: {
+          books: { $ne: [] },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: '$_id',
+          name: 1,
+          url: 1,
+        },
+      },
+    ]);
+
+    return {
+      statusCode: HttpStatus.OK,
+      data: categories,
+    };
+  }
+
   async findById(id: string): Promise<{ statusCode: number; data: Category }> {
     try {
       const category = await this.categoryModel.findById(id).lean().exec();
@@ -133,75 +203,5 @@ export class CategoriesService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async findAllNoPagination(): Promise<{
-    statusCode: number;
-    data: Category[];
-  }> {
-    const categories = await this.categoryModel.aggregate([
-      {
-        $lookup: {
-          from: 'books',
-          localField: '_id',
-          foreignField: 'categoryId',
-          as: 'books',
-        },
-      },
-      {
-        $match: {
-          books: { $ne: [] },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          id: '$_id',
-          name: 1,
-          url: 1,
-        },
-      },
-    ]);
-
-    return {
-      statusCode: HttpStatus.OK,
-      data: categories,
-    };
-  }
-
-  async findAllPagination(dto: CategoryPaginationDto): Promise<any> {
-    const { page = 1, limit = 10, ...filters } = dto;
-
-    const skip = (page - 1) * limit;
-
-    const filter: any = {};
-
-    if (filters.name) {
-      filter.name = { $regex: filters.name, $options: 'i' };
-    }
-
-    if (filters.url) {
-      filter.url = { $regex: filters.url, $options: 'i' };
-    }
-
-    const [data, total] = await Promise.all([
-      this.categoryModel
-        .find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ name: 1 })
-        .exec(),
-      this.categoryModel.countDocuments(filter).exec(),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      total,
-      totalPages,
-      currentPage: Number(page),
-      limit: Number(limit),
-      data,
-    };
   }
 }

@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateEpisodeDto } from 'src/_dtos/create_episode.dto';
+import { EpisodePaginationDto } from 'src/_dtos/episode-pagination.dto';
 import { CollectionDto } from 'src/_dtos/input.dto';
 import { UpdateEpisodeDto } from 'src/_dtos/update_episode.dto';
 import { Episode } from 'src/_schemas/episode.schema';
 import { AuthUser } from 'src/common/decorator/decorator.auth_user';
 import { AccessTokenGuard } from 'src/common/gaurds/gaurd.access_token';
 import { EpisodesService } from './episodes.service';
-import { EpisodePaginationDto } from 'src/_dtos/episode-pagination.dto';
 
 @ApiTags('Episodes')
 @ApiBearerAuth('JWT-auth')
@@ -29,6 +29,11 @@ export class EpisodesController {
   @Get()
   async findAll(@Query() query: CollectionDto): Promise<{ data: Episode[] }> {
     return this.episodesService.findAll(query);
+  }
+
+  @Get('all/pagination')
+  async findAllPagination(@Query() dto: EpisodePaginationDto) {
+    return this.episodesService.findAllPagination(dto);
   }
 
   @Get('by-me')
@@ -101,11 +106,6 @@ export class EpisodesController {
     return this.episodesService.findNextEpisode(chapterId, currentEpisodeId);
   }
 
-  @Post(':id/audio-url/transcribe')
-  async transcribeAudio(@Param('id') id: string) {
-    return this.episodesService.transcribeAudioUrl(id);
-  }
-
   @Patch(':id/update/is-top')
   async updateIsTop(@Param('id') id: string) {
     return this.episodesService.updateIsTop(id);
@@ -114,10 +114,5 @@ export class EpisodesController {
   @Get('get/all-top')
   async findAllTop(): Promise<{ data: Episode[] }> {
     return this.episodesService.findAllTop();
-  }
-
-  @Get('all/pagination')
-  async findAllPagination(@Query() dto: EpisodePaginationDto) {
-    return this.episodesService.findAllPagination(dto);
   }
 }

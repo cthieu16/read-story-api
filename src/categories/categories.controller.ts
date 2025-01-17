@@ -30,6 +30,16 @@ export class CategoriesController {
     return this.categoriesService.findAll(query);
   }
 
+  @Get('all/pagination')
+  async findAllPagination(@Query() dto: CategoryPaginationDto) {
+    return this.categoriesService.findAllPagination(dto);
+  }
+
+  @Get('all/no-pagination')
+  async findAllNoPagination(): Promise<{ data: Category[] }> {
+    return this.categoriesService.findAllNoPagination();
+  }
+
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.categoriesService.findById(id);
@@ -57,15 +67,5 @@ export class CategoriesController {
   async getCategoryValueLabels() {
     const valueLabels = await this.categoriesService.getCategoryValueLabels();
     return valueLabels;
-  }
-
-  @Get('all/no-pagination')
-  async findAllNoPagination(): Promise<{ data: Category[] }> {
-    return this.categoriesService.findAllNoPagination();
-  }
-
-  @Get('all/pagination')
-  async findAllPagination(@Query() dto: CategoryPaginationDto) {
-    return this.categoriesService.findAllPagination(dto);
   }
 }

@@ -6,21 +6,19 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { BookPaginationDto } from 'src/_dtos/book-pagination.dto';
 import { CreateBookDto } from '../_dtos/create_book.dto';
 import { CollectionDto } from '../_dtos/input.dto';
 import { CollectionResponse } from '../_dtos/output.dto';
 import { UpdateBookDto } from '../_dtos/update_book.dto';
 import { Book, BookDocument } from '../_schemas/book.schema';
 import { DocumentCollector } from '../common/executor/collector';
-import { BookPaginationDto } from 'src/_dtos/book-pagination.dto';
 
 @Injectable()
 export class BooksService {
   constructor(
     @InjectModel(Book.name)
     private readonly bookModel: Model<BookDocument>,
-    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(
@@ -29,6 +27,75 @@ export class BooksService {
     try {
       const collector = new DocumentCollector<BookDocument>(this.bookModel);
       return collector.find(collectionDto);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findAllPagination(dto: BookPaginationDto): Promise<any> {
+    const { page = 1, limit = 10, ...filters } = dto;
+
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (filters.name) {
+      filter.name = { $regex: filters.name, $options: 'i' };
+    }
+
+    if (filters.author) {
+      filter.author = { $regex: filters.author, $options: 'i' };
+    }
+
+    if (filters.description) {
+      filter.description = { $regex: filters.description, $options: 'i' };
+    }
+
+    if (filters.isPremium !== undefined) {
+      filter.isPremium = filters.isPremium;
+    }
+
+    if (filters.isTop10Year !== undefined) {
+      filter.isTop10Year = filters.isTop10Year;
+    }
+
+    if (filters.categoryId) {
+      filter.categoryId = filters.categoryId;
+    }
+
+    const [data, total] = await Promise.all([
+      this.bookModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ name: 1 })
+        .exec(),
+      this.bookModel.countDocuments(filter).exec(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      total,
+      totalPages,
+      currentPage: Number(page),
+      limit: Number(limit),
+      data,
+    };
+  }
+
+  async findAllNoPagination(
+    name?: string,
+  ): Promise<{ statusCode: number; data: Book[] }> {
+    try {
+      const filter = name ? { name: { $regex: name, $options: 'i' } } : {};
+
+      const books = await this.bookModel.find(filter).lean().exec();
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: books,
+      };
     } catch (error) {
       throw error;
     }
@@ -173,74 +240,5 @@ export class BooksService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async findAllNoPagination(
-    name?: string,
-  ): Promise<{ statusCode: number; data: Book[] }> {
-    try {
-      const filter = name ? { name: { $regex: name, $options: 'i' } } : {};
-
-      const books = await this.bookModel.find(filter).lean().exec();
-
-      return {
-        statusCode: HttpStatus.OK,
-        data: books,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findAllPagination(dto: BookPaginationDto): Promise<any> {
-    const { page = 1, limit = 10, ...filters } = dto;
-
-    const skip = (page - 1) * limit;
-
-    const filter: any = {};
-
-    if (filters.name) {
-      filter.name = { $regex: filters.name, $options: 'i' }; 
-    }
-
-    if (filters.author) {
-      filter.author = { $regex: filters.author, $options: 'i' }; 
-    }
-
-    if (filters.description) {
-      filter.description = { $regex: filters.description, $options: 'i' }; 
-    }
-
-    if (filters.isPremium !== undefined) {
-      filter.isPremium = filters.isPremium; 
-    }
-
-    if (filters.isTop10Year !== undefined) {
-      filter.isTop10Year = filters.isTop10Year; 
-    }
-
-    if (filters.categoryId) {
-      filter.categoryId = filters.categoryId; 
-    }
-
-    const [data, total] = await Promise.all([
-      this.bookModel
-        .find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ name: 1 })
-        .exec(),
-      this.bookModel.countDocuments(filter).exec(),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      total,
-      totalPages,
-      currentPage: Number(page),
-      limit: Number(limit),
-      data,
-    };
   }
 }
