@@ -10,8 +10,12 @@ export class CloudinaryService {
   private async uploadFileToDefaultFolder(
     file: Express.Multer.File,
     resourceType: 'image' | 'video' | 'raw' = 'image',
-  ): Promise<CloudinaryResponse> {
-    return new Promise<CloudinaryResponse>((resolve, reject) => {
+  ): Promise<{ secure_url: string }> {
+    if (!file) {
+      throw new Error('No file provided for upload.');
+    }
+
+    return new Promise<{ secure_url: string }>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder: this.defaultFolder, resource_type: resourceType },
         (error, result) => {
@@ -19,7 +23,11 @@ export class CloudinaryService {
             console.error('Cloudinary upload error:', error);
             return reject(error);
           }
-          resolve(result);
+          if (result && result.secure_url) {
+            resolve({ secure_url: result.secure_url });
+          } else {
+            reject(new Error('Upload successful but secure_url is missing.'));
+          }
         },
       );
 
@@ -30,7 +38,7 @@ export class CloudinaryService {
   async uploadFile(
     file: Express.Multer.File,
     resourceType: 'image' | 'video' | 'raw' = 'image',
-  ): Promise<CloudinaryResponse> {
+  ): Promise<any> {
     return this.uploadFileToDefaultFolder(file, resourceType);
   }
 
