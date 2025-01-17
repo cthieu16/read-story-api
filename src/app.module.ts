@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { UserSeed } from './_seeds/user.seed';
 import { User, UserSchema } from './_schemas/user.schema';
 import { UploadsModule } from './uploads/uploads.module';
+import { AiChatsModule } from './ai-chats/ai-chats.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UploadsModule } from './uploads/uploads.module';
     StatisticsModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     UploadsModule,
+    AiChatsModule,
   ],
   providers: [UserSeed],
 })
