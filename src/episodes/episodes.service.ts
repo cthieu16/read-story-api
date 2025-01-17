@@ -211,31 +211,6 @@ export class EpisodesService {
     }
   }
 
-  // async findByChapterId(
-  //   chapterId: string,
-  // ): Promise<{ statusCode: number; data: Episode[] }> {
-  //   try {
-  //     const episodes = await this.episodeModel
-  //       .find({ chapterId })
-  //       .sort({ createdAt: -1 })
-  // .populate({
-  //   path: 'chapterId',
-  //   populate: {
-  //     path: 'bookId',
-  //   },
-  // })
-  //       .lean()
-  //       .exec();
-
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       data: episodes.length ? episodes : [],
-  //     };
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
   async findByChapterId(chapterId: string): Promise<{
     statusCode: number;
     data: { book: Book; chapter: Chapter; episodes: Episode[] };
